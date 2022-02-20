@@ -1,0 +1,44 @@
+.container {
+    background: gray;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    form {
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        flex-direction: column;
+        background: whitesmoke;
+        height: 190px;
+        width: 250px;
+        padding: 5px 10px;
+
+        input,
+        button {
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 5px;
+            width: 100%;
+
+            &+input {
+                margin-bottom: 40px;
+            }
+        }
+
+        button {
+            padding: 10px 20px;
+            color: white;
+            background: blue;
+            border: none;
+            border-radius: 4px;
+            margin: 0 auto;
+            font-size: 12pt;
+        }
+
+    }
+}
