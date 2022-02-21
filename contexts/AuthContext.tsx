@@ -16,7 +16,8 @@ type SignCredentials = {
 }
 
 type AuthContextData = {
-    signIn(credentials: SignCredentials): Promise<void>;
+    signIn: (credentials: SignCredentials) => Promise<void>;
+    signOut: () => void;
     user: User;
     isAuthenticated: boolean;
 }
@@ -27,9 +28,13 @@ type AuthProviderProps = {
 
 export const AuthContext = createContext({} as AuthContextData);
 
+let authChannel: BroadcastChannel;
+
 export function signOut() {
     destroyCookie(undefined, 'nextAuth.token');
     destroyCookie(undefined, 'nextAuth.refreshToken');
+
+    authChannel.postMessage('signOut');
 
     Router.push('/');
 }
@@ -37,6 +42,24 @@ export function signOut() {
 export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User>();
     const isAuthenticated = !!user;
+
+    useEffect(() => {
+        authChannel = new BroadcastChannel('auth');
+        authChannel.onmessage = (message) => {
+            switch (message.data) {
+                case 'signOut':
+                    destroyCookie(undefined, 'nextAuth.token');
+                    destroyCookie(undefined, 'nextAuth.refreshToken');
+                    Router.push('/');
+                    break;
+                case 'signIn':
+                    document.location.reload();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }, [])
 
     useEffect(() => {
         const { 'nextAuth.token': token } = parseCookies();
@@ -74,6 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             api.defaults.headers['Authorization'] = `Bearer ${token}`;
 
+            authChannel.postMessage('signIn');
             Router.push('/dashboard');
         } catch (error) {
             console.log(error);
@@ -81,7 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     return (
-        <AuthContext.Provider value={{ signIn, isAuthenticated, user }}>
+        <AuthContext.Provider value={{ signIn, signOut, isAuthenticated, user }}>
             {children}
         </AuthContext.Provider>
     )
